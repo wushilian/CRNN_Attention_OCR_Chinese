@@ -69,8 +69,8 @@ def build_network(is_training):
     train_outputs = decode(train_helper, train_output_embed, 'decode')
 
     pred_outputs = decode(pred_helper, train_output_embed, 'decode', reuse=True)
-    train_decode_result = train_outputs[0].rnn_output[0:10, :-1, :]
-    pred_decode_result = pred_outputs[0].rnn_output[0:10, :, :]
+    train_decode_result = train_outputs[0].rnn_output[:, :-1, :]
+    pred_decode_result = pred_outputs[0].rnn_output
     mask = tf.cast(tf.sequence_mask(cfg.BATCH_SIZE * [train_length[0] - 1], train_length[0]),
                    tf.float32)
     att_loss = tf.contrib.seq2seq.sequence_loss(train_outputs[0].rnn_output, target_output,weights=mask)
