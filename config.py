@@ -26,7 +26,7 @@ DISPLAY_STEPS = 2
 LOGS_PATH = 'log'
 CKPT_DIR = 'save_model'
 train_dir='train'
-
+is_restore=True
 def label2int(label):#label shape (num,len)
     #seq_len=[]
     target_input=np.ones((len(label), MAX_LEN_WORD), dtype=np.float32) +2#初始化为全为PAD
