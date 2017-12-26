@@ -7,9 +7,7 @@ loss,train_decode_result,pred_decode_result=build_network(is_training=True)
 optimizer = tf.train.MomentumOptimizer(learning_rate=cfg.learning_rate, momentum=cfg.momentum, use_nesterov=True)
 train_op=optimizer.minimize(loss)
 saver = tf.train.Saver(max_to_keep=5)
-img,label=cfg.read_data(cfg.train_dir)
-num_train_samples=img.shape[0]
-num_batches_per_epoch = int(num_train_samples/cfg.BATCH_SIZE)
+
 sess = tf.Session()
 sess.run(tf.global_variables_initializer())
 with tf.name_scope('summaries'):
@@ -17,6 +15,15 @@ with tf.name_scope('summaries'):
 summary_op = tf.summary.merge_all()
 writer = tf.summary.FileWriter(cfg.LOGS_PATH)
 
+
+if cfg.is_restore:
+    ckpt = tf.train.latest_checkpoint(cfg.CKPT_DIR)
+    if ckpt:
+        saver.restore(sess,ckpt)
+        print('restore from the checkpoint{0}'.format(ckpt))
+img,label=cfg.read_data(cfg.train_dir)
+num_train_samples=img.shape[0]
+num_batches_per_epoch = int(num_train_samples/cfg.BATCH_SIZE)
 target_in,target_out=cfg.label2int(label)
 for cur_epoch in range(cfg.EPOCH):
     shuffle_idx = np.random.permutation(num_train_samples)
@@ -37,7 +44,7 @@ for cur_epoch in range(cfg.EPOCH):
             predit=cfg.int2label(np.argmax(infer_predict, axis=2))
             gt=cfg.int2label(batch_target_out)
             acc=cfg.cal_acc(predit,gt)
-            print("epoch:{}, batch:{}, loss:{}, acc:{}, predict_decode:{}, ground_truth:{}".
+            print("epoch:{}, batch:{}, loss:{}, acc:{},\n predict_decode:{}, \n ground_truth:{}".
                   format(cur_epoch,cur_batch,
                          loss_result,acc,
                          predit[0:10],
