@@ -68,5 +68,10 @@ def read_data(data_dir):
             num+=1
     print('---------------------------------get image:',num)
     return np.array(image),labels
-
+def cal_acc(pred,label):
+    num=0
+    for i in range(len(pred)):
+        if pred[i]==label[i]:
+            num+=1
+    return num*1.0/len(pred)
 
