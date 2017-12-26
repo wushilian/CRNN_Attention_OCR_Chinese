@@ -34,11 +34,14 @@ for cur_epoch in range(cfg.EPOCH):
             summary_loss, loss_result = sess.run([summary_op, loss],feed_dict={image: batch_inputs,train_output: batch_target_in,target_output: batch_target_out})
             writer.add_summary(summary_loss, cur_epoch*num_batches_per_epoch+cur_batch)
             infer_predict = sess.run(pred_decode_result,feed_dict={image: batch_inputs,train_output: batch_target_in,target_output: batch_target_out})
-            print("epoch:{}, batch:{}, loss:{}, predict_decode:{}, ground_truth:{}".
+            predit=cfg.int2label(np.argmax(infer_predict, axis=2))
+            gt=cfg.int2label(batch_target_out)
+            acc=cfg.cal_acc(predit,gt)
+            print("epoch:{}, batch:{}, loss:{}, acc:{}, predict_decode:{}, ground_truth:{}".
                   format(cur_epoch,cur_batch,
-                         loss_result,
-                         cfg.int2label(np.argmax(infer_predict, axis=2)),
-                         cfg.int2label(batch_target_out[0:10])))
+                         loss_result,acc,
+                         predit[0:10],
+                         gt[0:10]))
             if not os.path.exists(cfg.CKPT_DIR):
                 os.makedirs(cfg.CKPT_DIR)
             saver.save(sess, os.path.join(cfg.CKPT_DIR, 'attention_ocr.model'), global_step=cur_epoch*num_batches_per_epoch+cur_batch)
