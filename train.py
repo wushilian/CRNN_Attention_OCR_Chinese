@@ -30,7 +30,7 @@ for cur_epoch in range(cfg.EPOCH):
                   range(cur_batch * cfg.BATCH_SIZE, (cur_batch + 1) * cfg.BATCH_SIZE)]
         batch_inputs,batch_target_in,batch_target_out=img[indexs],target_in[indexs],target_out[indexs]
         sess.run( train_op,feed_dict={image: batch_inputs,train_output: batch_target_in,target_output: batch_target_out})
-        if cur_batch%cfg.DISPLAY_STEPS:
+        if cur_batch%cfg.DISPLAY_STEPS==0:
             summary_loss, loss_result = sess.run([summary_op, loss],feed_dict={image: batch_inputs,train_output: batch_target_in,target_output: batch_target_out})
             writer.add_summary(summary_loss, cur_epoch*num_batches_per_epoch+cur_batch)
             infer_predict = sess.run(pred_decode_result,feed_dict={image: batch_inputs,train_output: batch_target_in,target_output: batch_target_out})
