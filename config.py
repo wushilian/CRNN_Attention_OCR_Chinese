@@ -26,6 +26,8 @@ DISPLAY_STEPS = 2
 LOGS_PATH = 'log'
 CKPT_DIR = 'save_model'
 train_dir='train'
+val_dir='train'
+
 is_restore=True
 def label2int(label):#label shape (num,len)
     #seq_len=[]
@@ -66,7 +68,7 @@ def read_data(data_dir):
             image.append(np.array(img[:, :, np.newaxis]))
             labels.append(image_name.split('_')[1])
             num+=1
-    print('---------------------------------get image:',num)
+    print(data_dir,'---------------------------------get image:',num)
     return np.array(image),labels
 def cal_acc(pred,label):
     num=0
