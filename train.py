@@ -22,10 +22,12 @@ if cfg.is_restore:
         saver.restore(sess,ckpt)
         print('restore from the checkpoint{0}'.format(ckpt))
 img,label=cfg.read_data(cfg.train_dir)
+val_img,_=cfg.read_data(cfg.val_dir)
 num_train_samples=img.shape[0]
 num_batches_per_epoch = int(num_train_samples/cfg.BATCH_SIZE)
 target_in,target_out=cfg.label2int(label)
 for cur_epoch in range(cfg.EPOCH):
+    np.random.shuffle(val_img)
     shuffle_idx = np.random.permutation(num_train_samples)
     train_cost = 0
     start_time = time.time()
@@ -36,21 +38,21 @@ for cur_epoch in range(cfg.EPOCH):
         indexs = [shuffle_idx[i % num_train_samples] for i in
                   range(cur_batch * cfg.BATCH_SIZE, (cur_batch + 1) * cfg.BATCH_SIZE)]
         batch_inputs,batch_target_in,batch_target_out=img[indexs],target_in[indexs],target_out[indexs]
-         sess.run( train_op,feed_dict={image: batch_inputs,train_output: batch_target_in,target_output: batch_target_out,sample_rate:np.min([1.,0.1*cur_epoch])})
+        sess.run( train_op,feed_dict={image: batch_inputs,train_output: batch_target_in,target_output: batch_target_out,sample_rate:np.min([1.,0.1*cur_epoch])})
         if cur_batch%cfg.DISPLAY_STEPS==0:
             summary_loss, loss_result = sess.run([summary_op, loss],feed_dict={image: batch_inputs,train_output: batch_target_in,target_output: batch_target_out,
                                                                                sample_rate: np.min([1., 0.1 * cur_epoch])})
             writer.add_summary(summary_loss, cur_epoch*num_batches_per_epoch+cur_batch)
-            infer_predict = sess.run(pred_decode_result,feed_dict={image: batch_inputs})
+            val_predict = sess.run(pred_decode_result,feed_dict={image: val_img[0:cfg.BATCH_SIZE]})
             train_predict = sess.run(train_decode_result, feed_dict={image: batch_inputs, train_output: batch_target_in,
                                                                      target_output: batch_target_out,sample_rate:np.min([1.,0.1*cur_epoch])})
-            predit=cfg.int2label(np.argmax(infer_predict, axis=2))
-            train_pre=cfg.int2label(np.argmax(train_predict, axis=2))
-            gt=cfg.int2label(batch_target_out)
-            acc=cfg.cal_acc(predit,gt)
-            print("epoch:{}, batch:{}, loss:{}, acc:{},\n train_decode:{}, \n predict_decode:{}, \n ground_truth:{}".
-                  format(cur_epoch,cur_batch,
-                         loss_result,acc,
+            predit = cfg.int2label(np.argmax(val_predict, axis=2))
+            train_pre = cfg.int2label(np.argmax(train_predict, axis=2))
+            gt = cfg.int2label(batch_target_out)
+            acc = cfg.cal_acc(predit, gt)
+            print("epoch:{}, batch:{}, loss:{}, acc:{},\n train_decode:{}, \n val_decode:{}, \n ground_truth:{}".
+                  format(cur_epoch, cur_batch,
+                         loss_result, acc,
                          train_pre[0:10],
                          predit[0:10],
                          gt[0:10]))
