@@ -7,6 +7,7 @@ slim=tf.contrib.slim
 image = tf.placeholder(tf.float32, shape=(None,cfg.IMAGE_WIDTH,cfg.IMAGE_HEIGHT, 1), name='img_data')
 train_output = tf.placeholder(tf.int64, shape=[None, None], name='train_output')
 target_output = tf.placeholder(tf.int64, shape=[None, None], name='target_output')
+sample_rate=tf.placeholder(tf.float32, shape=[], name='sample_rate')
 train_length=np.array([27]*cfg.BATCH_SIZE,dtype=np.int32)
 
 def encoder_net(_image, scope,is_training, reuse=None):
@@ -59,7 +60,9 @@ def build_network(is_training):
 
     start_tokens = tf.zeros([cfg.BATCH_SIZE], dtype=tf.int64)
 
-    train_helper = tf.contrib.seq2seq.TrainingHelper(output_embed, train_length)
+    #train_helper = tf.contrib.seq2seq.TrainingHelper(output_embed, train_length)
+    train_helper = tf.contrib.seq2seq.ScheduledEmbeddingTrainingHelper(output_embed, train_length,
+                                                                       embeddings, sample_rate)
 
     #用于inference阶段的helper，将output输出后的logits使用argmax获得id再经过embedding layer来获取下一时刻的输入。
     #start_tokens： batch中每个序列起始输入的token_id  end_token：序列终止的token_id
