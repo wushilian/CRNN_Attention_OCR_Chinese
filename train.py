@@ -36,12 +36,14 @@ for cur_epoch in range(cfg.EPOCH):
         indexs = [shuffle_idx[i % num_train_samples] for i in
                   range(cur_batch * cfg.BATCH_SIZE, (cur_batch + 1) * cfg.BATCH_SIZE)]
         batch_inputs,batch_target_in,batch_target_out=img[indexs],target_in[indexs],target_out[indexs]
-        sess.run( train_op,feed_dict={image: batch_inputs,train_output: batch_target_in,target_output: batch_target_out})
+         sess.run( train_op,feed_dict={image: batch_inputs,train_output: batch_target_in,target_output: batch_target_out,sample_rate:np.min([1.,0.1*cur_epoch])})
         if cur_batch%cfg.DISPLAY_STEPS==0:
-            summary_loss, loss_result = sess.run([summary_op, loss],feed_dict={image: batch_inputs,train_output: batch_target_in,target_output: batch_target_out})
+            summary_loss, loss_result = sess.run([summary_op, loss],feed_dict={image: batch_inputs,train_output: batch_target_in,target_output: batch_target_out,
+                                                                               sample_rate: np.min([1., 0.1 * cur_epoch])})
             writer.add_summary(summary_loss, cur_epoch*num_batches_per_epoch+cur_batch)
-            infer_predict = sess.run(pred_decode_result,feed_dict={image: batch_inputs,train_output: batch_target_in,target_output: batch_target_out})
-            train_predict = sess.run(train_decode_result,feed_dict={image: batch_inputs,train_output: batch_target_in,target_output: batch_target_out})
+            infer_predict = sess.run(pred_decode_result,feed_dict={image: batch_inputs})
+            train_predict = sess.run(train_decode_result, feed_dict={image: batch_inputs, train_output: batch_target_in,
+                                                                     target_output: batch_target_out,sample_rate:np.min([1.,0.1*cur_epoch])})
             predit=cfg.int2label(np.argmax(infer_predict, axis=2))
             train_pre=cfg.int2label(np.argmax(train_predict, axis=2))
             gt=cfg.int2label(batch_target_out)
