@@ -1,5 +1,5 @@
 # CRNN_Attention_OCR
-CRNN with attention to do OCR
+CRNN with attention to do OCR，this is just a toy code to show how use seq2seq with attention in OCR
 ## network model
 CRNN is base CNN,and BiLSTM with 256 hidden_units is encode network ,GRU with 256 hidden_units is decode network
 
