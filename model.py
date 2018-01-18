@@ -10,9 +10,10 @@ target_output = tf.placeholder(tf.int64, shape=[None, None], name='target_output
 sample_rate=tf.placeholder(tf.float32, shape=[], name='sample_rate')
 train_length=np.array([27]*cfg.BATCH_SIZE,dtype=np.int32)
 
-def encoder_net(_image, scope,is_training, reuse=None):
+def encoder_net(_image, scope,is_training,reuse=None):
     with tf.variable_scope(scope, reuse=reuse):
-        net = slim.conv2d(_image, 64, [3, 3], scope='conv1')
+        net = tf.layers.batch_normalization(_image, training=is_training)
+        net = slim.conv2d(net, 64, [3, 3], scope='conv1')
         net = slim.max_pool2d(net, [2, 2], scope='pool1')
         net = slim.conv2d(net, 128, [3, 3], scope='conv2')
         net = slim.max_pool2d(net, [2, 2], scope='pool2')
@@ -34,9 +35,9 @@ def encoder_net(_image, scope,is_training, reuse=None):
         cell = tf.contrib.rnn.GRUCell(num_units=cfg.RNN_UNITS)
         enc_outputs, enc_state = tf.nn.bidirectional_dynamic_rnn(cell_fw=cell,cell_bw=cell,inputs=cnn_out,dtype=tf.float32)#双向LSTM
         encoder_outputs = tf.concat(enc_outputs, -1)
-        return encoder_outputs
+        return encoder_outputs,enc_state
 
-def decode(helper, memory, scope, reuse=None):
+def decode(helper, memory, scope, enc_state,reuse=None):
     with tf.variable_scope(scope, reuse=reuse):
         attention_mechanism = tf.contrib.seq2seq.LuongAttention(num_units=cfg.RNN_UNITS, memory=memory)
         cell = tf.contrib.rnn.GRUCell(num_units=cfg.RNN_UNITS)
@@ -45,14 +46,14 @@ def decode(helper, memory, scope, reuse=None):
 
         decoder = tf.contrib.seq2seq.BasicDecoder(
             cell=attn_cell, helper=helper,
-            initial_state=attn_cell.zero_state(dtype=tf.float32, batch_size=cfg.BATCH_SIZE),
+            initial_state=attn_cell.zero_state(dtype=tf.float32, batch_size=cfg.BATCH_SIZE).clone(cell_state=enc_state[0]),
             output_layer=output_layer)
         outputs = tf.contrib.seq2seq.dynamic_decode(
             decoder=decoder, output_time_major=False,
             impute_finished=True, maximum_iterations=27)
         return outputs
 def build_network(is_training):
-    train_output_embed= encoder_net(image, 'encode_features',is_training)
+    train_output_embed,enc_state= encoder_net(image, 'encode_features',is_training)
 
 #vocab_size: 输入数据的总词汇量，指的是总共有多少类词汇，不是总个数，embed_dim：想要得到的嵌入矩阵的维度
     output_embed = layers.embed_sequence(train_output, vocab_size=cfg.VOCAB_SIZE, embed_dim=cfg.VOCAB_SIZE, scope='embed')#有种变为one-hot的意味
@@ -60,7 +61,6 @@ def build_network(is_training):
 
     start_tokens = tf.zeros([cfg.BATCH_SIZE], dtype=tf.int64)
 
-    #train_helper = tf.contrib.seq2seq.TrainingHelper(output_embed, train_length)
     train_helper = tf.contrib.seq2seq.ScheduledEmbeddingTrainingHelper(output_embed, train_length,
                                                                        embeddings, sample_rate)
 
@@ -69,15 +69,18 @@ def build_network(is_training):
     #start_tokens: int32 vector shaped [batch_size], the start tokens.
     #end_token: int32 scalar, the token that marks end of decoding.
     pred_helper = tf.contrib.seq2seq.GreedyEmbeddingHelper(embeddings, start_tokens=tf.to_int32(start_tokens), end_token=1)#GO,EOS的序号
-    train_outputs = decode(train_helper, train_output_embed, 'decode')
+    train_outputs = decode(train_helper, train_output_embed,'decode',enc_state)
 
-    pred_outputs = decode(pred_helper, train_output_embed, 'decode', reuse=True)
+    pred_outputs = decode(pred_helper, train_output_embed, 'decode',enc_state, reuse=True)
     train_decode_result = train_outputs[0].rnn_output[:, :-1, :]
     pred_decode_result = pred_outputs[0].rnn_output
     mask = tf.cast(tf.sequence_mask(cfg.BATCH_SIZE * [train_length[0] - 1], train_length[0]),
                    tf.float32)
     att_loss = tf.contrib.seq2seq.sequence_loss(train_outputs[0].rnn_output, target_output,weights=mask)
+
     loss = tf.reduce_mean(att_loss)
+
+    
 
 
 
