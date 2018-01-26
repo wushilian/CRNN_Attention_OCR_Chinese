@@ -8,7 +8,7 @@ image = tf.placeholder(tf.float32, shape=(None,cfg.IMAGE_WIDTH,cfg.IMAGE_HEIGHT,
 train_output = tf.placeholder(tf.int64, shape=[None, None], name='train_output')
 target_output = tf.placeholder(tf.int64, shape=[None, None], name='target_output')
 sample_rate=tf.placeholder(tf.float32, shape=[], name='sample_rate')
-train_length=np.array([27]*cfg.BATCH_SIZE,dtype=np.int32)
+train_length=np.array([20]*cfg.BATCH_SIZE,dtype=np.int32)
 
 def encoder_net(_image, scope,is_training,reuse=None):
     with tf.variable_scope(scope, reuse=reuse):
@@ -50,7 +50,7 @@ def decode(helper, memory, scope, enc_state,reuse=None):
             output_layer=output_layer)
         outputs = tf.contrib.seq2seq.dynamic_decode(
             decoder=decoder, output_time_major=False,
-            impute_finished=True, maximum_iterations=27)
+            impute_finished=True, maximum_iterations=20)
         return outputs
 def build_network(is_training):
     train_output_embed,enc_state= encoder_net(image, 'encode_features',is_training)
