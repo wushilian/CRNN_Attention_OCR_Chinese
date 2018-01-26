@@ -22,9 +22,9 @@ if cfg.is_restore:
     if ckpt:
         saver.restore(sess,ckpt)
         print('restore from the checkpoint{0}'.format(ckpt))
-img,label=cfg.read_data('../dataset/Chinese/','train.txt')
+img,label=cfg.read_data(config.train_dir,'train.txt')
 #img,label=cfg.read_data('test','test.txt')
-val_img,val_label=cfg.read_data('test','test.txt')
+val_img,val_label=cfg.read_data(config.val_dir,'test.txt')
 num_train_samples=img.shape[0]
 num_batches_per_epoch = int(num_train_samples/cfg.BATCH_SIZE)
 target_in,target_out=cfg.label2int(label)
