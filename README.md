@@ -8,7 +8,7 @@ CNN用的是CRNN中的结构，一层双向lstm做编码器，一层GRU做解码
 在config.py里修改路径，运行train.py
 ## 依赖
 TensorFlow >=1.2<br>
-opencv
-##引用
+opencv<br>
+## 引用
 [caffe_ocr](https://github.com/senlinuc/caffe_ocr)<br>
 [attention-ocr-toy-example](https://github.com/ray075hl/attention-ocr-toy-example)
