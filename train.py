@@ -1,3 +1,4 @@
+
 from model import *
 import config as cfg
 import time
@@ -21,8 +22,9 @@ if cfg.is_restore:
     if ckpt:
         saver.restore(sess,ckpt)
         print('restore from the checkpoint{0}'.format(ckpt))
-img,label=cfg.read_data(cfg.train_dir)
-val_img,val_label=cfg.read_data(cfg.val_dir)
+img,label=cfg.read_data('../dataset/Chinese/','train.txt')
+#img,label=cfg.read_data('test','test.txt')
+val_img,val_label=cfg.read_data('test','test.txt')
 num_train_samples=img.shape[0]
 num_batches_per_epoch = int(num_train_samples/cfg.BATCH_SIZE)
 target_in,target_out=cfg.label2int(label)
@@ -42,11 +44,11 @@ for cur_epoch in range(cfg.EPOCH):
         sess.run( train_op,feed_dict={image: batch_inputs,train_output: batch_target_in,target_output: batch_target_out,sample_rate:np.min([1.,0.2*cur_epoch+0.2])})
         if cur_batch%cfg.DISPLAY_STEPS==0:
             summary_loss, loss_result = sess.run([summary_op, loss],feed_dict={image: batch_inputs,train_output: batch_target_in,target_output: batch_target_out,
-                                                                               sample_rate: np.min([1., 0.2*cur_epoch+0.2])})
+                                                                               sample_rate: np.min([1., 1.])})
             writer.add_summary(summary_loss, cur_epoch*num_batches_per_epoch+cur_batch)
             val_predict = sess.run(pred_decode_result,feed_dict={image: val_img[0:cfg.BATCH_SIZE]})
             train_predict = sess.run(pred_decode_result, feed_dict={image: batch_inputs, train_output: batch_target_in,
-                                                                     target_output: batch_target_out,sample_rate:np.min([1., 0.2*cur_epoch+0.2])})
+                                                                     target_output: batch_target_out,sample_rate:np.min([1., 1.])})
             predit = cfg.int2label(np.argmax(val_predict, axis=2))
             train_pre = cfg.int2label(np.argmax(train_predict, axis=2))
             gt = val_label[0:cfg.BATCH_SIZE]
@@ -60,6 +62,3 @@ for cur_epoch in range(cfg.EPOCH):
             if not os.path.exists(cfg.CKPT_DIR):
                 os.makedirs(cfg.CKPT_DIR)
             saver.save(sess, os.path.join(cfg.CKPT_DIR, 'attention_ocr.model'), global_step=cur_epoch*num_batches_per_epoch+cur_batch)
-
-
-
