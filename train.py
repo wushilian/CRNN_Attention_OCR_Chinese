@@ -4,7 +4,8 @@ import time
 import os
 from sklearn.utils import shuffle
 loss,train_decode_result,pred_decode_result=build_network(is_training=True)
-optimizer = tf.train.MomentumOptimizer(learning_rate=cfg.learning_rate, momentum=cfg.momentum, use_nesterov=True)
+optimizer=tf.train.AdamOptimizer(cfg.learning_rate)
+#optimizer = tf.train.MomentumOptimizer(learning_rate=cfg.learning_rate, momentum=cfg.momentum, use_nesterov=True)
 train_op=optimizer.minimize(loss)
 saver = tf.train.Saver(max_to_keep=5)
 
