@@ -1,7 +1,7 @@
 import numpy as np
 import cv2
 import os
-learning_rate=0.001
+learning_rate=1e-4
 momentum=0.9
 START_TOKEN = 0
 END_TOKEN = 1
