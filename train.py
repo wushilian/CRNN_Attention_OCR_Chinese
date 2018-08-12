@@ -6,15 +6,16 @@ import os
 from sklearn.utils import shuffle
 loss,train_decode_result,pred_decode_result=build_network(is_training=True)
 optimizer = tf.train.MomentumOptimizer(learning_rate=cfg.learning_rate, momentum=cfg.momentum, use_nesterov=True)
-update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
-
-train_op=optimizer.minimize(loss)
 var_list = tf.trainable_variables()
 g_list = tf.global_variables()
 bn_moving_vars = [g for g in g_list if 'moving_mean' in g.name]
 bn_moving_vars += [g for g in g_list if 'moving_variance' in g.name]
 var_list += bn_moving_vars
 saver = tf.train.Saver(var_list=var_list,max_to_keep=5)
+update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+with tf.control_dependencies(update_ops):
+    train_op=optimizer.minimize(loss)
+
 
 sess = tf.Session()
 sess.run(tf.global_variables_initializer())
