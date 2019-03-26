@@ -2,6 +2,7 @@ import tensorflow as tf
 import config as cfg
 from tensorflow.contrib import layers
 from tensorflow.python.layers.core import Dense
+from tensorflow.python.ops import embedding_ops
 import numpy as np
 slim=tf.contrib.slim
 image = tf.placeholder(tf.float32, shape=(None,cfg.IMAGE_WIDTH,cfg.IMAGE_HEIGHT, 1), name='img_data')
@@ -56,8 +57,8 @@ def build_network(is_training):
     train_output_embed,enc_state= encoder_net(image, 'encode_features',is_training)
 
 #vocab_size: 输入数据的总词汇量，指的是总共有多少类词汇，不是总个数，embed_dim：想要得到的嵌入矩阵的维度
-    output_embed = layers.embed_sequence(train_output, vocab_size=cfg.VOCAB_SIZE, embed_dim=cfg.VOCAB_SIZE, scope='embed')#有种变为one-hot的意味
-    embeddings = tf.Variable(tf.truncated_normal(shape=[cfg.VOCAB_SIZE, cfg.VOCAB_SIZE], stddev=0.1), name='decoder_embedding')#embdding变为类别
+    embeddings = tf.get_variable(name='embed_matrix',shape=[cfg.VOCAB_SIZE, cfg.VOCAB_SIZE])
+    output_embed=embedding_ops.embedding_lookup(embeddings,train_output)
 
     start_tokens = tf.zeros([cfg.BATCH_SIZE], dtype=tf.int64)
 
