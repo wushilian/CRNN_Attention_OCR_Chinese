@@ -58,7 +58,7 @@ def build_network(is_training):
     train_output_embed,enc_state= encoder_net(image, 'encode_features',is_training)
 
 #vocab_size: 输入数据的总词汇量，指的是总共有多少类词汇，不是总个数，embed_dim：想要得到的嵌入矩阵的维度
-    embeddings = tf.get_variable(name='embed_matrix',shape=[cfg.VOCAB_SIZE, cfg.VOCAB_SIZE])
+    embeddings = tf.get_variable(name='embed_matrix',shape=[cfg.VOCAB_SIZE,256])
     output_embed=embedding_ops.embedding_lookup(embeddings,train_output)
    
 
